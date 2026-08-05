@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>anydoc — 文档，毫秒变 Markdown</title>
+<meta name="description" content="快速 Rust 库，将 Word、PowerPoint、Excel、OpenDocument、RTF、EPUB、CSV 和 PDF 转换为干净的 GitHub 风格 Markdown。由 Firecrawl 构建。">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/app.js" defer></script>
+</head>
+<body>
+
+<!-- 纸张颗粒感与网格氛围 -->
+<div class="noise" aria-hidden="true"></div>
+<div class="page-rules" aria-hidden="true"></div>
+
+<!-- ======== 顶部导航 ======== -->
+<nav class="nav" aria-label="主导航">
+  <div class="nav-blur" aria-hidden="true"></div>
+  <div class="nav-inner">
+    <a href="#top" class="brand"><span class="mark">a</span><span>anydoc</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="#features">特性</a>
+      <a href="#formats">格式</a>
+      <a href="#quickstart">开始</a>
+      <a href="#benchmark">基准</a>
+      <a href="#how">原理</a>
+    </div>
+    <a href="#quickstart" class="cta">立即开始</a>
+    <button class="nav-burger" id="nav-burger" aria-label="切换菜单" aria-expanded="false" aria-controls="nav-links">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<main id="top">
+<!-- ======== 首屏 ======== -->
+<header class="hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-copy reveal">
+        <div class="kicker"><span class="pulse" aria-hidden="true"></span> Firecrawl · 文档转换引擎</div>
+        <h1>文档<br>变<span class="accent">正文</span>。<br><span class="accent">毫秒</span>级。</h1>
+        <p class="lede">
+          一个由 <strong>Firecrawl</strong> 打造的快速 <strong>Rust</strong> 库：把 Word、PowerPoint、Excel、
+          OpenDocument、RTF、EPUB、CSV 与 PDF，统一转换成干净的
+          <strong>GitHub 风格 Markdown</strong>。无论是什么格式，输出始终一致。
+        </p>
+        <div class="hero-ctas">
+          <a href="#quickstart" class="btn btn-primary">快速开始</a>
+          <a href="#benchmark" class="btn btn-ghost">查看基准</a>
+        </div>
+      </div>
+
+      <div class="console reveal" style="--d:120ms" role="img" aria-label="终端输出示例">
+        <div class="console-bar">
+          <span class="ctl r"></span><span class="ctl y"></span><span class="ctl g"></span>
+          <span class="title">report.docx — stdout</span>
+        </div>
+        <div class="console-body">$ <span class="o">npx</span> @firecrawl/anydoc report.docx
+<span class="c"># 干净的 Markdown，直接输出</span>
+
+# 季度销售报告
+## 概览
+| <span class="b">区域</span> | <span class="b">营收</span> | <span class="b">增长</span> |
+|------|------|------|
+| 北美 | $120k | 12.4% |
+| 欧洲 | $98k  | 8.1%  |
+<span class="ok">✓ 已完成 · 4.7ms</span></div>
+        <span class="console-tag">纯 Rust · 无外部服务</span>
+      </div>
+    </div>
+
+    <!-- 数据饰带 -->
+    <div class="hero-stats reveal">
+      <div class="stat">
+        <div class="big"><span data-count="4.7" data-decimals=".1">0.0</span><span class="unit"> ms</span></div>
+        <div class="lbl">中位转换耗时</div>
+      </div>
+      <div class="stat">
+        <div class="big"><span data-count="14">0</span><span class="unit"> /14</span></div>
+        <div class="lbl">支持格式覆盖</div>
+      </div>
+      <div class="stat">
+        <div class="big"><span data-count="100">0</span><span class="unit">%</span></div>
+        <div class="lbl">纯 Rust 实现</div>
+      </div>
+      <div class="stat">
+        <div class="big"><span data-count="5">0</span><span class="unit"> ms</span></div>
+        <div class="lbl">内部硬性指标</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ======== 跑马灯 ======== -->
+<div class="marquee" aria-label="支持的格式预览">
+  <div class="marquee-track" role="presentation">
+    <span>Word</span><span>PDF</span><span>Excel</span><span>PowerPoint</span>
+    <span>OpenDocument</span><span>RTF</span><span>EPUB</span><span>CSV</span>
+  </div>
+</div>
+
+<!-- ======== 特性 ======== -->
+<section class="section features" id="features">
+  <div class="container">
+    <div class="section-bar reveal">
+      <span class="num">/ 01</span>
+      <h2>特性</h2>
+      <span class="meta">为什么是 anydoc</span>
+    </div>
+    <div class="feature-list">
+      <div class="feature reveal">
+        <span class="idx">F—01</span>
+        <h3>所有格式统一输出</h3>
+        <p>每种格式都解析为同一个文档模型，经同一序列化器渲染。无论是 2003 年的 <code class="mono">.doc</code> 还是昨天的 <code class="mono">.pptx</code>，转义、表格、标题锚点与脚注行为完全一致。</p>
+      </div>
+      <div class="feature reveal" style="--d:60ms">
+        <span class="idx">F—02</span>
+        <h3>完整文档结构</h3>
+        <p>带锚点的标题、粗体/斜体/删除线、行内代码与代码块、链接与交叉引用、保留原始编号的列表、合并单元格表格、块引用、脚注尾注与演讲者备注。</p>
+      </div>
+      <div class="feature reveal">
+        <span class="idx">F—03</span>
+        <h3>嵌入资源</h3>
+        <p>图片与嵌入对象渲染为替代文本，原始字节保留在文档模型上并标记媒体类型；带外部 URL 的图片则转为普通 Markdown 图片。</p>
+      </div>
+      <div class="feature reveal" style="--d:60ms">
+        <span class="idx">F—04</span>
+        <h3>基于内容的格式检测</h3>
+        <p>格式从字节本身读取：PDF 头、RTF 开组、OLE 流名称、ZIP 包 mimetype。文件扩展名写错了，照样能正确转换。</p>
+      </div>
+      <div class="feature reveal">
+        <span class="idx">F—05</span>
+        <h3>快</h3>
+        <p>纯 Rust 实现，无机器学习模型，无外部服务。单文档转换中位数低于 <code class="mono">5ms</code>。</p>
+      </div>
+      <div class="feature reveal" style="--d:60ms">
+        <span class="idx">F—06</span>
+        <h3>非侵入式绑定</h3>
+        <p>Node.js 转换跑在 libuv 线程池，从不阻塞事件循环；Python 释放 GIL 让其他线程继续。TypeScript 类型与 Python 存根随包发布。</p>
+      </div>
+      <div class="feature reveal">
+        <span class="idx">F—07</span>
+        <h3>内置 PDF 支持</h3>
+        <p>基于文本的 PDF 通过 pdf-inspector 在本地转换，无需 OCR 服务，数据不离开你的机器。</p>
+      </div>
+      <div class="feature reveal" style="--d:60ms">
+        <span class="idx">F—08</span>
+        <h3>智能体就绪</h3>
+        <p>以 Agent Skill 形式发布：一条 <code class="mono">npx skills add firecrawl/anydoc</code>，即可让任何智能体读取办公文档，兼容 Claude Code、Codex、Cursor、OpenCode 等。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 格式 ======== -->
+<section class="section" id="formats">
+  <div class="container">
+    <div class="section-bar reveal">
+      <span class="num">/ 02</span>
+      <h2>支持格式</h2>
+      <span class="meta">8 大类 · 14 种扩展名</span>
+    </div>
+    <div class="formats-grid">
+      <div class="format reveal">
+        <span class="name">Word</span>
+        <span class="exts"><span>.doc</span><span>.docx</span><span>.docm</span></span>
+      </div>
+      <div class="format reveal" style="--d:60ms">
+        <span class="name">PowerPoint</span>
+        <span class="exts"><span>.ppt</span><span>.pps</span><span>.pot</span><span>.pptx</span><span>.pptm</span><span>.ppsx</span><span>.ppsm</span></span>
+      </div>
+      <div class="format reveal">
+        <span class="name">Excel</span>
+        <span class="exts"><span>.xls</span><span>.xlsx</span><span>.xlsm</span><span>.xlsb</span></span>
+      </div>
+      <div class="format reveal" style="--d:60ms">
+        <span class="name">OpenDocument</span>
+        <span class="exts"><span>.odt</span><span>.ods</span><span>.odp</span></span>
+      </div>
+      <div class="format reveal">
+        <span class="name">RTF</span>
+        <span class="exts"><span>.rtf</span></span>
+      </div>
+      <div class="format reveal" style="--d:60ms">
+        <span class="name">EPUB</span>
+        <span class="exts"><span>.epub</span></span>
+      </div>
+      <div class="format reveal">
+        <span class="name">CSV</span>
+        <span class="exts"><span>.csv</span></span>
+      </div>
+      <div class="format reveal" style="--d:60ms">
+        <span class="name">PDF</span>
+        <span class="exts"><span>.pdf</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 快速开始 ======== -->
+<section class="section quickstart" id="quickstart">
+  <div class="container">
+    <div class="section-bar reveal">
+      <span class="num">/ 03</span>
+      <h2>快速开始</h2>
+      <span class="meta">四处语言接口</span>
+    </div>
+
+    <div class="tabs reveal" role="tablist" aria-label="选择语言">
+      <button class="tab active" role="tab" aria-selected="true" data-tab="cli" id="tab-cli" aria-controls="pane-cli">CLI</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="node" id="tab-node" aria-controls="pane-node" type="button">Node.js</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="python" id="tab-python" aria-controls="pane-python" type="button">Python</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="rust" id="tab-rust" aria-controls="pane-rust" type="button">Rust</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="skill" id="tab-skill" aria-controls="pane-skill" type="button">Agent 技能</button>
+    </div>
+
+    <div class="code-shell reveal" style="--d:120ms">
+      <div class="shell-head">
+        <span class="fname" id="shell-fname">report.docx → stdout</span>
+        <button class="copy-btn" data-copy="pane-cli" type="button">复制</button>
+      </div>
+
+      <div class="code-pane active" id="pane-cli" role="tabpanel" aria-labelledby="tab-cli">
+        <pre><code><span class="c"># Markdown 输出到 stdout</span>
+npx @firecrawl/anydoc <span class="fn">report.docx</span>
+
+<span class="c"># 或输出到文件</span>
+npx @firecrawl/anydoc <span class="fn">slides.pptx</span> -o <span class="s">slides.md</span>
+
+<span class="c"># 从 stdin 读取</span>
+npx @firecrawl/anydoc - --format <span class="s">csv</span> &lt; data.csv
+
+<span class="c"># 首次运行自动下载各平台二进制</span>
+<span class="c"># 永久安装：npm install -g @firecrawl/anydoc</span></code></pre>
+      </div>
+
+      <div class="code-pane" id="pane-node" role="tabpanel" aria-labelledby="tab-node">
+        <pre><code>npm install <span class="fn">@firecrawl/anydoc</span>
+
+<span class="k">import</span> { toDocument, toMarkdown, toMarkdownBytes } <span class="k">from</span> <span class="s">'@firecrawl/anydoc'</span>;
+
+<span class="c">// 从文件路径：</span>
+<span class="k">const</span> markdown = <span class="k">await</span> toMarkdown(<span class="s">'report.docx'</span>);
+
+<span class="c">// 从字节，格式自动检测：</span>
+<span class="k">const</span> fromBytes = <span class="k">await</span> toMarkdownBytes(bytes);
+
+<span class="c">// 或指定格式名（无签名格式需如此）：</span>
+<span class="k">const</span> fromCsv = <span class="k">await</span> toMarkdownBytes(bytes, <span class="s">'csv'</span>);
+
+<span class="c">// 或返回文档模型，携带嵌入资源：</span>
+<span class="k">const</span> document = <span class="k">await</span> toDocument(bytes);</code></pre>
+      </div>
+
+      <div class="code-pane" id="pane-python" role="tabpanel" aria-labelledby="tab-python">
+        <pre><code>pip install <span class="fn">firecrawl-anydoc</span>
+
+<span class="k">import</span> anydoc
+
+<span class="c"># 从文件路径读取</span>
+markdown = anydoc.to_markdown(<span class="s">"report.docx"</span>)
+
+<span class="c"># 从字节，内容从自动检测</span>
+markdown = anydoc.to_markdown_bytes(data)
+
+<span class="c"># 或指定格式名（无签名格式需如此）</span>
+markdown = anydoc.to_markdown_bytes(data, <span class="s">"csv"</span>)
+
+<span class="c"># 或返回文档模型，携带嵌入资源</span>
+document = anydoc.to_document(data)</code></pre>
+      </div>
+
+      <div class="code-pane" id="pane-rust" role="tabpanel" aria-labelledby="tab-rust">
+        <pre><code>cargo add <span class="fn">anydoc</span>
+
+<span class="c">// 从文件路径读取</span>
+<span class="k">let</span> markdown = anydoc::to_markdown(<span class="s">"report.docx"</span>)?;
+
+<span class="c">// 从字节，内容自动检测</span>
+<span class="k">let</span> markdown = anydoc::to_markdown_bytes(&amp;bytes, None)?;
+
+<span class="c">// 或指定格式名：</span>
+<span class="k">let</span> markdown = anydoc::to_markdown_bytes(&amp;bytes, anydoc::Format::Csv)?;
+
+<span class="c">// 或返回文档模型：</span>
+<span class="k">let</span> document = anydoc::to_document(&amp;bytes, None)?;</code></pre>
+      </div>
+
+      <div class="code-pane" id="pane-skill" role="tabpanel" aria-labelledby="tab-skill">
+        <pre><code><span class="c"># 让任何智能体读取办公文档</span>
+npx skills add <span class="fn">firecrawl/anydoc</span>
+
+<span class="c"># 兼容 Claude Code · Codex · Cursor</span>
+<span class="c">#       OpenCode · 及其他兼容智能体</span></code></pre>
+      </div>
+    </div>
+    <p class="qs-note">&gt; 完整 API 参考见各语言 README —— Node / Python 绑定随包发布。</p>
+  </div>
+</section>
+
+<!-- ======== 基准测试 ======== -->
+<section class="section bench" id="benchmark">
+  <div class="container">
+    <div class="section-bar reveal">
+      <span class="num">/ 04</span>
+      <h2>基准测试</h2>
+      <span class="meta">479 次 LLM 盲测裁决</span>
+    </div>
+
+    <div class="bench-table reveal">
+      <table class="bench">
+        <thead>
+          <tr>
+            <th>工具</th><th>格式</th><th>中位ms</th><th>评审文档</th>
+            <th>总分</th><th>完整性</th><th>结构</th><th>格式</th><th>整洁度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="win">
+            <td class="name">anydoc</td><td>14/14</td><td>4.7</td><td>94</td>
+            <td>80<span class="bar" style="color:var(--accent); --fill:80%"></span></td>
+            <td>88</td><td>78</td><td>77</td><td>79</td>
+          </tr>
+          <tr>
+            <td>libreoffice</td><td>12/14</td><td>1129.5</td><td>87</td>
+            <td>40<span class="bar" style="color:var(--paper-3); --fill:40%"></span></td>
+            <td>59</td><td>43</td><td>43</td><td>24</td>
+          </tr>
+          <tr>
+            <td>unstructured</td><td>8/14</td><td>572.9</td><td>58</td>
+            <td>65<span class="bar" style="color:var(--paper-2); --fill:65%"></span></td>
+            <td>76</td><td>62</td><td>52</td><td>67</td>
+          </tr>
+          <tr>
+            <td>markitdown</td><td>6/14</td><td>134.8</td><td>33</td>
+            <td>65<span class="bar" style="color:var(--paper-2); --fill:65%"></span></td>
+            <td>80</td><td>67</td><td>61</td><td>53</td>
+          </tr>
+          <tr>
+            <td>pandoc</td><td>5/14</td><td>102.1</td><td>34</td>
+            <td>57<span class="bar" style="color:var(--paper-3); --fill:57%"></span></td>
+            <td>75</td><td>57</td><td>58</td><td>39</td>
+          </tr>
+          <tr>
+            <td>docling</td><td>4/14</td><td>513.6</td><td>21</td>
+            <td>57<span class="bar" style="color:var(--paper-3); --fill:57%"></span></td>
+            <td>63</td><td>59</td><td>57</td><td>52</td>
+          </tr>
+          <tr>
+            <td>mammoth</td><td>1/14</td><td>52.5</td><td>8</td>
+            <td>70<span class="bar" style="color:var(--ok); --fill:70%"></span></td>
+            <td>85</td><td>68</td><td>74</td><td>55</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bench-foot">
+      <p><strong>逐格式对比（anydoc 得分）：</strong> doc <strong>88</strong> · docm <strong>82</strong> · docx <strong>86</strong> · epub <strong>74</strong> · odp <strong>87</strong> · ods <strong>82</strong> · odt <strong>80</strong> · ppt <strong>80</strong> · pptx <strong>76</strong> · rtf <strong>89</strong> · xls <strong>77</strong> · xlsm <strong>70</strong> · xlsx <strong>70</strong> —— 在除 EPUB 外的所有被评审格式上均为最高分。</p>
+      <p><strong>评分方式：</strong> 由 LLM 评判（Claude Sonnet 5）在盲测中，将工具输出与基准真相（文档前六页由 LibreOffice 渲染为图像）对比，按完整性 / 结构 / 格式 / 整洁度评分；交换顺序各评审一次以消除位置偏差，共 479 次裁决。总分是各工具所支持格式的平均分——因此每行平均的格式集合不同，逐格式对比才是最公平的比较。</p>
+      <p><strong>速度：</strong> Ryzen 9 9950X3D（Windows 11 · 64GB DDR5-6400）单线程、每个文档一次预热后计时。anydoc 与各语言库的计时排除了进程启动开销。</p>
+    </div>
+
+    <div class="best-for">
+      <h3>最佳适用场景</h3>
+      <p>接收混合办公文档、需要统一结构化 Markdown 输出的流水线。anydoc 是唯一覆盖全部十四种格式的工具，除 EPUB 外在所有被评审格式上最高分，且转换速度比次快工具高出一个数量级。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 工作原理 ======== -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-bar reveal">
+      <span class="num">/ 05</span>
+      <h2>工作原理</h2>
+      <span class="meta">一条统一流水线</span>
+    </div>
+
+    <blockquote class="ed reveal">
+      因为所有格式都流经<strong>同一个文档模型与序列化器</strong>，输出问题只需修复一次——
+      docx 的表格转义修复，会自动成为 rtf、odt 及其它所有格式的修复。
+    </blockquote>
+
+    <div class="pipeline reveal">
+      <div class="step">
+        <span class="k">STEP 01</span>
+        <h3>格式检测</h3>
+        <p>基于内容标记而非扩展名：PDF 头、RTF 开组、OLE 流名称、ZIP 包 mimetype。</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </div>
+      <div class="step">
+        <span class="k">STEP 02</span>
+        <h3>格式解析器</h3>
+        <p>每种格式一个解析器：doc · docx · ppt · pptx · xls · xlsx · odt/ods/odp · rtf · epub · csv。</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </div>
+      <div class="step">
+        <span class="k">STEP 03</span>
+        <h3>文档模型</h3>
+        <p>所有格式统一映射到共享模型：块、内联、表格、脚注、资源。</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </div>
+      <div class="step">
+        <span class="k">STEP 04</span>
+        <h3>GFM 序列化器</h3>
+        <p>统一输出 GitHub 风格 Markdown。PDF 由 pdf-inspector 直接产出 Markdown。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 识别 / 开发 ======== -->
+<section class="section" id="detection">
+  <div class="container">
+    <div class="grid-2">
+      <div class="reveal">
+        <div class="section-bar">
+          <span class="num">/ 06</span>
+          <h2>格式检测</h2>
+          <span class="meta">三种方式</span>
+        </div>
+        <p style="color:var(--paper-2);font-size:0.92rem;max-width:60ch;margin-bottom:1.4rem;">
+          格式从文件内容中读取，使用规范指定的标记：PDF 头、RTF 开组、OLE 流名称、ZIP 包 mimetype 与内容类型。CSV 没有此类标记，因此通过扩展名或显式格式名识别。Node（<code class="mono">formatFromBytes</code> 等）与 Python（<code class="mono">anydoc.format_from_bytes</code> 等）提供相同函数。
+        </p>
+        <div class="code-shell flush">
+          <div class="shell-head"><span class="fname">format_detect.rs</span></div>
+          <div class="code-pane active">
+            <pre><code><span class="k">Format</span>::from_bytes(&amp;bytes);            <span class="c">// Some(Format::Docx)</span>
+<span class="k">Format</span>::from_extension(<span class="s">"pptm"</span>);        <span class="c">// Some(Format::Pptx)</span>
+<span class="k">Format</span>::from_path(Path::new(<span class="s">"report.odt"</span>)); <span class="c">// Some(Format::Odt)</span></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal" style="--d:100ms">
+        <div class="section-bar">
+          <span class="num">/ 07</span>
+          <h2>开发</h2>
+          <span class="meta">本地构建</span>
+        </div>
+        <div class="code-shell flush">
+          <div class="shell-head"><span class="fname">build &amp; test</span></div>
+          <div class="code-pane active">
+            <pre><code>cargo test
+cd node &amp;&amp; npm install &amp;&amp; npm run build &amp;&amp; npm test
+cd python &amp;&amp; pip install maturin &amp;&amp; maturin develop
+    &amp;&amp; python -m unittest discover -s tests</code></pre>
+          </div>
+        </div>
+        <p style="color:var(--paper-3);font-size:0.8rem;margin-top:1rem;">
+          固定语料库快照测试 · 变异测试 · 每种格式的 cargo-fuzz 目标。版本以 v&lt;version&gt; 标签发布，同步发布 crate、npm 包与 PyPI 轮子。许可证 MIT。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ======== 页脚 ======== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-word" aria-hidden="true">anydoc</div>
+    <div class="footer-row">
+      <div class="footer-made">© <span data-year>2026</span> anydoc · 由 Firecrawl 构建</div>
+      <div class="footer-links">
+        <a href="https://github.com/firecrawl/anydoc">GitHub</a>
+        <a href="https://crates.io/crates/anydoc">crates.io</a>
+        <a href="https://www.npmjs.com/package/@firecrawl/anydoc">npm</a>
+        <a href="https://pypi.org/project/firecrawl-anydoc/">PyPI</a>
+        <a href="https://firecrawl.dev">Firecrawl</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
+
+
