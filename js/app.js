@@ -114,16 +114,39 @@
       tabs.forEach(function (t) {
         t.classList.remove('active');
         t.setAttribute('aria-selected', 'false');
+        t.setAttribute('tabindex', '-1');
       });
       panes.forEach(function (p) { p.classList.remove('active'); });
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
+      tab.setAttribute('tabindex', '0');
       var target = document.getElementById('pane-' + key);
       if (target) target.classList.add('active');
       if (copyBtn) copyBtn.setAttribute('data-copy', 'pane-' + key);
       if (fnameEl && paneTitles[key]) fnameEl.textContent = paneTitles[key];
     });
   });
+
+  /* Tab 键盘导航（← / → / Home / End） */
+  var tabList = document.querySelector('.tabs[role="tablist"]');
+  if (tabList) {
+    tabList.addEventListener('keydown', function (e) {
+      var tabArr = Array.prototype.slice.call(tabs);
+      var currentIdx = tabArr.indexOf(document.activeElement);
+      if (currentIdx === -1) return;
+      var nextIdx = null;
+      switch (e.key) {
+        case 'ArrowRight': nextIdx = (currentIdx + 1) % tabArr.length; break;
+        case 'ArrowLeft': nextIdx = (currentIdx - 1 + tabArr.length) % tabArr.length; break;
+        case 'Home': nextIdx = 0; break;
+        case 'End': nextIdx = tabArr.length - 1; break;
+        default: return;
+      }
+      e.preventDefault();
+      tabArr[nextIdx].focus();
+      tabArr[nextIdx].click();
+    });
+  }
 
   /* ---------- 代码复制 ---------- */
   var copyBtns = document.querySelectorAll('.copy-btn');
@@ -166,4 +189,31 @@
   /* ---------- 页脚年份 ---------- */
   var year = document.querySelector('[data-year]');
   if (year) year.textContent = new Date().getFullYear();
+
+  /* ---------- 顶部滚动进度条 ---------- */
+  var progressBar = document.querySelector('.scroll-progress');
+  function updateProgress() {
+    if (!progressBar) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.scrollY / h : 0;
+    progressBar.style.setProperty('--p', Math.min(p, 1));
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  /* ---------- 活动导航高亮 ---------- */
+  var sections = document.querySelectorAll('.section[id], header.hero');
+  var navAnchors = document.querySelectorAll('.nav-links a[href^="#"]');
+  function highlightNav() {
+    var current = '';
+    sections.forEach(function (s) {
+      var top = s.getBoundingClientRect().top;
+      if (top <= 120) current = s.id || '';
+    });
+    navAnchors.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', highlightNav, { passive: true });
+  highlightNav();
 })();

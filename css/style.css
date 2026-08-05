@@ -114,6 +114,9 @@ button {
   position: relative;
   padding-block: clamp(4rem, 10vw, 7.5rem);
 }
+@media (max-width: 720px) {
+  .section { padding-block: clamp(3rem, 8vw, 5rem); }
+}
 
 /* 每个版块的编辑信息：编号 + 指引线 */
 .section-bar {
@@ -152,7 +155,7 @@ button {
 }
 
 @media (max-width: 640px) {
-  .section-bar .meta { display: none; }
+  .section-bar .meta { /* handled in §14.13 refinements below */ }
 }
 
 /* 滚动入场 */
@@ -238,6 +241,8 @@ button {
 }
 .nav-links a:hover { color: var(--paper); }
 .nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a.active { color: var(--accent); }
+.nav-links a.active::after { transform: scaleX(1); }
 
 .nav .cta {
   font-family: var(--font-display);
@@ -295,8 +300,8 @@ button {
 /* ---------- 4. 首屏 Hero ---------- */
 .hero {
   position: relative;
-  padding-top: clamp(2.5rem, 6vw, 5rem);
-  padding-bottom: clamp(3rem, 8vw, 6rem);
+  padding-top: clamp(3rem, 7vw, 6rem);
+  padding-bottom: clamp(3rem, 8vw, 7rem);
   overflow: hidden;
 }
 .hero-glow {
@@ -430,7 +435,7 @@ button {
 }
 @media (max-width: 720px) {
   .hero-stats { grid-template-columns: repeat(2, 1fr); }
-  .hero-stats .stat:nth-child(2) { border-right: none; }
+  .hero-stats .stat:nth-child(2n+1) { border-right: 1px solid var(--line); }
   .hero-stats .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
 }
 
@@ -551,8 +556,11 @@ button {
   overflow: hidden;
   transition: background 0.3s;
 }
-.feature:nth-child(odd) { border-right: 1px solid var(--line); }
-@media (max-width: 860px) { .feature { border-right: 0 !important; } }
+/* In 2-col grid, kill the right border on the second column to avoid double lines */
+@media (min-width: 860px) {
+  .feature:nth-child(2n) { border-right: none; }
+}
+@media (max-width: 860px) { .feature { border-right: none; } }
 
 .feature::before {
   content: "";
@@ -969,4 +977,211 @@ blockquote.ed strong { color: var(--paper); }
   .marquee-track { animation: none; }
   .hero .kicker .pulse { animation: none; }
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ============================================================
+   14. 精修 (Refinements v2) —— 视觉细节 + 可访问性打磨
+   ============================================================ */
+
+/* 14.1 锚点补偿：sticky 导航约 62px，加安全边距 */
+html { scroll-padding-top: 80px; }
+.hero, .section { scroll-margin-top: 80px; }
+
+/* 14.2 顶部滚动进度条 */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--warn));
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+  transition: transform 0.1s linear;
+  z-index: 45;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 14.3 Hero 大标题 accent：清理冗余 + 悬停回填色 */
+.hero h1 .accent {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+  transition: color 0.45s var(--ease), -webkit-text-stroke-color 0.45s var(--ease);
+}
+.hero h1:hover .accent { color: var(--accent); }
+
+/* 14.4 Hero 统计块：hover 微高亮 */
+.hero-stats .stat {
+  transition: background 0.25s var(--ease);
+  cursor: default;
+}
+.hero-stats .stat:hover {
+  background: color-mix(in srgb, var(--panel) 45%, transparent);
+}
+
+/* 14.5 控制台卡片：悬浮抬升 + 更深阴影 */
+.console {
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+  will-change: transform;
+}
+.console:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 55px 110px -40px rgba(0,0,0,0.85);
+}
+
+/* 14.6 主按钮 & 幽灵按钮：光斑扫过 */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg,
+    transparent 32%,
+    rgba(255,255,255,0.22) 48%,
+    transparent 68%);
+  transform: translateX(-120%);
+  transition: transform 0.75s var(--ease);
+  pointer-events: none;
+}
+.btn:hover::before { transform: translateX(120%); }
+
+/* 14.7 特性卡：修正 2 列末行 + 单列末尾双底线 */
+@media (min-width: 860px) {
+  .feature:nth-last-child(-n+2) { border-bottom: none; }
+}
+@media (max-width: 860px) {
+  .feature:last-child { border-bottom: none; }
+}
+
+/* 14.8 格式卡：窄屏堆叠可读性 */
+@media (max-width: 480px) {
+  .format { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .format .exts { justify-content: flex-start; }
+}
+.format .exts span {
+  transition: transform 0.2s var(--ease), border-color 0.2s, color 0.2s, background 0.2s;
+}
+.format:hover .exts span { background: rgba(232,100,60,0.06); }
+
+/* 14.9 Tab 键盘焦点更清晰 */
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 3px;
+  color: var(--paper);
+}
+
+/* 14.10 基准表横向滚动包裹 —— 修复原 CSS 类名不匹配的 bug */
+.bench-table {
+  overflow-x: auto;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--bg-2);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+  position: relative;
+}
+.bench-table::-webkit-scrollbar { height: 6px; }
+.bench-table::-webkit-scrollbar-track { background: transparent; }
+.bench-table::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
+.bench-table::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* 14.11 冠军行前置视觉引导 ▸ */
+table.bench .win td:first-child {
+  position: relative;
+  padding-left: 2.2rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+table.bench .win td:first-child::before {
+  content: "▸";
+  position: absolute;
+  left: 1.05rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-size: 0.9em;
+  animation: winPulse 2.4s ease-in-out infinite;
+}
+@keyframes winPulse {
+  0%, 100% { transform: translateY(-50%) translateX(0); opacity: 1; }
+  50% { transform: translateY(-50%) translateX(3px); opacity: 0.75; }
+}
+
+/* 14.12 "最佳场景" 卡：徽章与标题不再重叠 */
+.best-for h3 { padding-right: 7.2rem; }
+@media (max-width: 520px) {
+  .best-for::before {
+    position: static;
+    display: inline-block;
+    margin-bottom: 0.6rem;
+  }
+  .best-for h3 { padding-right: 0; }
+}
+
+/* 14.13 Section-bar：窄屏保留 meta（不再直接隐藏） */
+@media (max-width: 640px) {
+  .section-bar { flex-wrap: wrap; align-items: flex-start; }
+  .section-bar .meta {
+    display: block;
+    order: 3;
+    width: 100%;
+    text-align: left;
+    margin: 0.5rem 0 0;
+  }
+  .section-bar h2 { flex: 1 1 auto; }
+}
+
+/* 14.14 流水线步骤 hover */
+.step { transition: background 0.3s; }
+.step:hover { background: var(--panel-2); }
+.step .arrow { transition: transform 0.3s var(--ease); }
+.step:hover .arrow { transform: translateX(4px); }
+
+/* 14.15 复制按钮成功态图标 */
+.copy-btn.copied::before {
+  content: "✓ ";
+  margin-right: 0.1em;
+  font-weight: 700;
+}
+
+/* 14.16 代码框 & 控制台滚动条统一细化 */
+.code-pane pre::-webkit-scrollbar,
+.console-body::-webkit-scrollbar { height: 6px; }
+.code-pane pre::-webkit-scrollbar-thumb,
+.console-body::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 3px;
+}
+.code-pane pre::-webkit-scrollbar-thumb:hover,
+.console-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+.code-pane pre { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+
+/* 14.17 品牌 logo 强调：hover 时更活泼 */
+.brand:hover .mark { transform: rotate(4deg) scale(1.08); }
+
+/* 14.18 数据饰带数字：加固基线（防止不同 unit 抖动） */
+.stat .big { font-variant-numeric: tabular-nums; }
+
+/* 14.19 页脚镂空大字：轻微渐隐 */
+.footer-word {
+  background-image: linear-gradient(180deg, var(--bg-2) 20%, transparent 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+}
+
+/* 14.20 图片链接与可点击 pill 的可见焦点 */
+.format:focus-within,
+.feature:focus-within { background: var(--panel); }
+
+/* 14.21 无障碍：低动效模式关闭额外光效 */
+@media (prefers-reduced-motion: reduce) {
+  .btn::before,
+  table.bench .win td:first-child::before,
+  .scroll-progress { animation: none; }
+  .console:hover { transform: none; }
+  .scroll-progress { display: none; }
 }
